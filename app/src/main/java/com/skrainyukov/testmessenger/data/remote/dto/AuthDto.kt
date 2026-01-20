@@ -9,6 +9,11 @@ data class SendAuthCodeRequest(
 )
 
 @Serializable
+data class SendAuthCodeResponse(
+    @SerialName("is_success") val isSuccess: Boolean
+)
+
+@Serializable
 data class CheckAuthCodeRequest(
     @SerialName("phone") val phone: String,
     @SerialName("code") val code: String
@@ -31,9 +36,9 @@ data class RegisterRequest(
 
 @Serializable
 data class RegisterResponse(
-    @SerialName("refresh_token") val refreshToken: String,
-    @SerialName("access_token") val accessToken: String,
-    @SerialName("user_id") val userId: Long
+    @SerialName("refresh_token") val refreshToken: String?,
+    @SerialName("access_token") val accessToken: String?,
+    @SerialName("user_id") val userId: Long?
 )
 
 @Serializable
@@ -43,7 +48,7 @@ data class RefreshTokenRequest(
 
 @Serializable
 data class RefreshTokenResponse(
-    @SerialName("refresh_token") val refreshToken: String,
-    @SerialName("access_token") val accessToken: String,
-    @SerialName("user_id") val userId: Long
+    @SerialName("refresh_token") val refreshToken: String?,
+    @SerialName("access_token") val accessToken: String?,
+    @SerialName("user_id") val userId: Long?
 )

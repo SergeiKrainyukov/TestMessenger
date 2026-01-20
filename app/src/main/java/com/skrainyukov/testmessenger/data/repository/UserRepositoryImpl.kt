@@ -65,20 +65,32 @@ class UserRepositoryImpl @Inject constructor(
         avatarBase64: String?
     ): Result<User> {
         return runCatchingResult {
+            val userId = tokenDataStore.userId.first()
+                ?: throw IllegalStateException("User not authenticated")
+
+            val cachedUser = userDao.getUserById(userId).first()
+                ?: throw IllegalStateException("User not found in cache")
+
             val avatarData = if (avatarFilename != null && avatarBase64 != null) {
                 AvatarData(avatarFilename, avatarBase64)
             } else null
 
-            val response = userApi.updateUser(
+            // Update user - returns only avatars
+            userApi.updateUser(
                 UpdateUserRequest(
                     name = name,
+                    username = cachedUser.username,
                     birthday = birthday,
                     city = city,
+                    vk = null,
+                    instagram = null,
                     status = about,
                     avatar = avatarData
                 )
             )
 
+            // Get updated user data
+            val response = userApi.getCurrentUser()
             val user = response.profileData.toDomain()
 
             // Update cache

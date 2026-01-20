@@ -130,11 +130,13 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // Все поля должны отображаться всегда согласно ТЗ
                     ProfileInfoItem("Телефон", state.user?.phone ?: "")
-                    state.user?.city?.let { ProfileInfoItem("Город", it) }
-                    state.user?.birthday?.let { ProfileInfoItem("Дата рождения", it) }
-                    state.user?.zodiacSign?.let { ProfileInfoItem("Знак зодиака", it.displayName) }
-                    state.user?.about?.let { ProfileInfoItem("О себе", it) }
+                    ProfileInfoItem("Никнейм", state.user?.username ?: "")
+                    ProfileInfoItem("Город", state.user?.city ?: "Не указан")
+                    ProfileInfoItem("Дата рождения", state.user?.birthday ?: "Не указана")
+                    ProfileInfoItem("Знак зодиака", state.user?.zodiacSign?.displayName ?: "Не определен")
+                    ProfileInfoItem("О себе", state.user?.about?.ifEmpty { "Не указано" } ?: "Не указано")
 
                     Spacer(modifier = Modifier.height(32.dp))
 

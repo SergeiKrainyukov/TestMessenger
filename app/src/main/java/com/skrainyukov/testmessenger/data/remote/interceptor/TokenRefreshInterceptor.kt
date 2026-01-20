@@ -60,26 +60,30 @@ class TokenRefreshInterceptor @Inject constructor(
 
                             if (refreshResponse.isSuccessful) {
                                 val responseBody = refreshResponse.body?.string() ?: ""
-                                val jsonResponse = json.parseToJsonElement(responseBody).jsonObject
 
-                                val newAccessToken = jsonResponse["access_token"]?.jsonPrimitive?.content
-                                val newRefreshToken = jsonResponse["refresh_token"]?.jsonPrimitive?.content
-                                val userId = jsonResponse["user_id"]?.jsonPrimitive?.content?.toLongOrNull()
+                                // Tokens are nullable according to swagger
+                                if (responseBody.isNotEmpty()) {
+                                    val jsonResponse = json.parseToJsonElement(responseBody).jsonObject
 
-                                if (newAccessToken != null && newRefreshToken != null && userId != null) {
-                                    // Save new tokens
-                                    tokenDataStore.saveTokens(
-                                        accessToken = newAccessToken,
-                                        refreshToken = newRefreshToken,
-                                        userId = userId
-                                    )
+                                    val newAccessToken = jsonResponse["access_token"]?.jsonPrimitive?.content
+                                    val newRefreshToken = jsonResponse["refresh_token"]?.jsonPrimitive?.content
+                                    val userId = jsonResponse["user_id"]?.jsonPrimitive?.content?.toLongOrNull()
 
-                                    // Retry original request with new token
-                                    val newRequest = request.newBuilder()
-                                        .header("Authorization", "Bearer $newAccessToken")
-                                        .build()
+                                    if (newAccessToken != null && newRefreshToken != null && userId != null) {
+                                        // Save new tokens
+                                        tokenDataStore.saveTokens(
+                                            accessToken = newAccessToken,
+                                            refreshToken = newRefreshToken,
+                                            userId = userId
+                                        )
 
-                                    return@withLock chain.proceed(newRequest)
+                                        // Retry original request with new token
+                                        val newRequest = request.newBuilder()
+                                            .header("Authorization", "Bearer $newAccessToken")
+                                            .build()
+
+                                        return@withLock chain.proceed(newRequest)
+                                    }
                                 }
                             }
 
