@@ -2,9 +2,12 @@ package com.skrainyukov.testmessenger.presentation.screens.profile.view
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,15 +28,18 @@ import kotlinx.coroutines.flow.collectLatest
 fun ProfileScreen(
     onNavigateToEdit: () -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToAuth: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 ProfileEffect.NavigateToEdit -> onNavigateToEdit()
+                ProfileEffect.NavigateToAuth -> onNavigateToAuth()
                 is ProfileEffect.ShowError -> {
                     Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
                 }
@@ -72,60 +78,109 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .verticalScroll(rememberScrollState())
             ) {
-                // Avatar
-                if (state.user?.avatar != null) {
-                    AsyncImage(
-                        model = state.user!!.avatar,
-                        contentDescription = "Аватар",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                    )
-                } else {
-                    Surface(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = state.user?.name?.firstOrNull()?.toString() ?: "?",
-                                fontSize = 48.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Avatar
+                    if (state.user?.avatar != null) {
+                        AsyncImage(
+                            model = state.user!!.avatar,
+                            contentDescription = "Аватар",
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                        )
+                    } else {
+                        Surface(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = state.user?.name?.firstOrNull()?.toString() ?: "?",
+                                    fontSize = 48.sp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = state.user?.name ?: "",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "@${state.user?.username}",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    ProfileInfoItem("Телефон", state.user?.phone ?: "")
+                    state.user?.city?.let { ProfileInfoItem("Город", it) }
+                    state.user?.birthday?.let { ProfileInfoItem("Дата рождения", it) }
+                    state.user?.zodiacSign?.let { ProfileInfoItem("Знак зодиака", it.displayName) }
+                    state.user?.about?.let { ProfileInfoItem("О себе", it) }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // Logout button
+                    OutlinedButton(
+                        onClick = { showLogoutDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Выйти из аккаунта")
+                    }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = state.user?.name ?: "",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "@${state.user?.username}",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                ProfileInfoItem("Телефон", state.user?.phone ?: "")
-                state.user?.city?.let { ProfileInfoItem("Город", it) }
-                state.user?.birthday?.let { ProfileInfoItem("Дата рождения", it) }
-                state.user?.zodiacSign?.let { ProfileInfoItem("Знак зодиака", it.displayName) }
-                state.user?.about?.let { ProfileInfoItem("О себе", it) }
             }
         }
+    }
+
+    // Logout confirmation dialog
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Выход") },
+            text = { Text("Вы уверены, что хотите выйти из аккаунта?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        viewModel.onEvent(ProfileEvent.OnLogoutClick)
+                    }
+                ) {
+                    Text("Выйти", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Отмена")
+                }
+            }
+        )
     }
 }
 

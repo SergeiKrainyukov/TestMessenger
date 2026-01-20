@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.skrainyukov.testmessenger.domain.repository.AuthRepository
 import com.skrainyukov.testmessenger.domain.usecase.auth.SendAuthCodeUseCase
+import com.skrainyukov.testmessenger.presentation.components.Country
 import com.skrainyukov.testmessenger.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -27,17 +28,35 @@ class PhoneViewModel @Inject constructor(
     private val _effect = Channel<PhoneEffect>()
     val effect = _effect.receiveAsFlow()
 
+    fun setInitialCountry(country: Country) {
+        if (_state.value.selectedCountry == null) {
+            _state.update { it.copy(selectedCountry = country) }
+        }
+    }
+
     fun onEvent(event: PhoneEvent) {
         when (event) {
-            is PhoneEvent.OnPhoneChanged -> onPhoneChanged(event.phone)
+            is PhoneEvent.OnPhoneNumberChanged -> onPhoneNumberChanged(event.phoneNumber)
+            is PhoneEvent.OnCountrySelected -> onCountrySelected(event.country)
             PhoneEvent.OnSendCodeClick -> sendAuthCode()
         }
     }
 
-    private fun onPhoneChanged(phone: String) {
+    private fun onPhoneNumberChanged(phoneNumber: String) {
+        _state.update {
+            val fullPhone = (it.selectedCountry?.dialCode ?: "") + phoneNumber
+            it.copy(
+                phoneNumber = phoneNumber,
+                isPhoneValid = isPhoneValid(phoneNumber),
+                error = null
+            )
+        }
+    }
+
+    private fun onCountrySelected(country: Country) {
         _state.update { it.copy(
-            phone = phone,
-            isPhoneValid = isPhoneValid(phone),
+            selectedCountry = country,
+            isPhoneValid = isPhoneValid(it.phoneNumber),
             error = null
         ) }
     }
@@ -46,11 +65,13 @@ class PhoneViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
-            val phone = _state.value.phone
-            when (val result = sendAuthCodeUseCase(phone)) {
+            val currentState = _state.value
+            val fullPhone = (currentState.selectedCountry?.dialCode ?: "+7") + currentState.phoneNumber
+
+            when (val result = sendAuthCodeUseCase(fullPhone)) {
                 is Result.Success -> {
-                    authRepository.savePhone(phone)
-                    _effect.send(PhoneEffect.NavigateToCode(phone))
+                    authRepository.savePhone(fullPhone)
+                    _effect.send(PhoneEffect.NavigateToCode(fullPhone))
                 }
                 is Result.Error -> {
                     _state.update { it.copy(
@@ -65,9 +86,10 @@ class PhoneViewModel @Inject constructor(
         }
     }
 
-    private fun isPhoneValid(phone: String): Boolean {
-        // Basic validation: phone should start with + and have 11-15 digits
-        val digitsOnly = phone.filter { it.isDigit() }
-        return phone.startsWith("+") && digitsOnly.length in 10..15
+    private fun isPhoneValid(phoneNumber: String): Boolean {
+        // Validate only the number part (without country code)
+        // Should be 10 digits for most countries
+        val digitsOnly = phoneNumber.filter { it.isDigit() }
+        return digitsOnly.length in 10..11
     }
 }

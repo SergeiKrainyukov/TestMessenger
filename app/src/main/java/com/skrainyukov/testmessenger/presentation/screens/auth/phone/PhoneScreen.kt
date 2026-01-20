@@ -8,13 +8,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skrainyukov.testmessenger.presentation.components.LoadingButton
-import androidx.compose.foundation.text.KeyboardOptions
+import com.skrainyukov.testmessenger.presentation.components.PhoneNumberInput
+import com.skrainyukov.testmessenger.presentation.components.rememberCurrentCountry
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -24,6 +24,14 @@ fun PhoneScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // Get current region as default
+    val currentCountry = rememberCurrentCountry()
+
+    // Set initial country once
+    LaunchedEffect(currentCountry) {
+        viewModel.setInitialCountry(currentCountry)
+    }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
@@ -59,16 +67,17 @@ fun PhoneScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        OutlinedTextField(
-            value = state.phone,
-            onValueChange = { viewModel.onEvent(PhoneEvent.OnPhoneChanged(it)) },
-            label = { Text("Номер телефона") },
-            placeholder = { Text("+79219999999") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            isError = state.error != null
-        )
+        // Use the new phone number input with country picker
+        state.selectedCountry?.let { country ->
+            PhoneNumberInput(
+                phoneNumber = state.phoneNumber,
+                onPhoneNumberChange = { viewModel.onEvent(PhoneEvent.OnPhoneNumberChanged(it)) },
+                selectedCountry = country,
+                onCountrySelected = { viewModel.onEvent(PhoneEvent.OnCountrySelected(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                isError = state.error != null
+            )
+        }
 
         if (state.error != null) {
             Spacer(modifier = Modifier.height(8.dp))

@@ -2,6 +2,7 @@ package com.skrainyukov.testmessenger.presentation.screens.profile.view
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.skrainyukov.testmessenger.domain.repository.AuthRepository
 import com.skrainyukov.testmessenger.domain.usecase.profile.GetCurrentUserUseCase
 import com.skrainyukov.testmessenger.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,7 +13,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val getCurrentUserUseCase: GetCurrentUserUseCase
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileState())
@@ -31,6 +33,7 @@ class ProfileViewModel @Inject constructor(
             ProfileEvent.OnEditClick -> viewModelScope.launch {
                 _effect.send(ProfileEffect.NavigateToEdit)
             }
+            ProfileEvent.OnLogoutClick -> logout()
         }
     }
 
@@ -51,6 +54,13 @@ class ProfileViewModel @Inject constructor(
                 }
                 is Result.Loading -> {}
             }
+        }
+    }
+
+    private fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+            _effect.send(ProfileEffect.NavigateToAuth)
         }
     }
 }

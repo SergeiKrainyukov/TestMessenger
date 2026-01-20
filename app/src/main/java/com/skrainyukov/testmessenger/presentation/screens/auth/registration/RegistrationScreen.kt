@@ -71,7 +71,7 @@ fun RegistrationScreen(
         OutlinedTextField(
             value = state.username,
             onValueChange = { viewModel.onEvent(RegistrationEvent.OnUsernameChanged(it)) },
-            label = { Text("Username") },
+            label = { Text("Логин") },
             placeholder = { Text("ivan_ivanov") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
