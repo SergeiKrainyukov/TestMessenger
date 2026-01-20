@@ -29,12 +29,17 @@ class AuthRepositoryImpl @Inject constructor(
         return runCatchingResult {
             val response = authApi.checkAuthCode(CheckAuthCodeRequest(phone, code))
 
-            // Save tokens
-            tokenDataStore.saveTokens(
-                accessToken = response.accessToken,
-                refreshToken = response.refreshToken,
-                userId = response.userId
-            )
+            // Save tokens only if user exists
+            if (response.isUserExists &&
+                response.accessToken != null &&
+                response.refreshToken != null &&
+                response.userId != null) {
+                tokenDataStore.saveTokens(
+                    accessToken = response.accessToken,
+                    refreshToken = response.refreshToken,
+                    userId = response.userId
+                )
+            }
 
             AuthResult(
                 refreshToken = response.refreshToken,
