@@ -1,7 +1,6 @@
 package com.skrainyukov.testmessenger.di
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import com.skrainyukov.testmessenger.data.local.datastore.TokenDataStore
 import com.skrainyukov.testmessenger.data.remote.api.AuthApi
 import com.skrainyukov.testmessenger.data.remote.api.UserApi
 import com.skrainyukov.testmessenger.data.remote.interceptor.AuthInterceptor
@@ -44,10 +43,12 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
+        tokenRefreshInterceptor: TokenRefreshInterceptor,
         loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .addInterceptor(tokenRefreshInterceptor)
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)

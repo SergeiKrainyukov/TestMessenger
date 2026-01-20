@@ -162,9 +162,24 @@ class PhoneViewModel @Inject constructor(
 
 ### Управление токенами
 Реализована автоматическая система обновления токенов:
-- `AuthInterceptor` - добавляет access token к запросам
-- `TokenRefreshInterceptor` - перехватывает 401 и обновляет токены
+- `AuthInterceptor` - добавляет Bearer access token к запросам (кроме auth endpoints)
+- `TokenRefreshInterceptor` - перехватывает 401 и автоматически обновляет токены
 - `Mutex` - предотвращает race condition при одновременных запросах
+- Отдельный `OkHttpClient` для refresh запросов (избегаем circular dependency)
+
+**Порядок interceptors:**
+1. AuthInterceptor → добавляет токен
+2. TokenRefreshInterceptor → обрабатывает 401
+3. LoggingInterceptor → логирует все запросы
+
+**Жизненный цикл токена (10 минут):**
+1. Запрос с истекшим токеном → 401 ответ
+2. TokenRefreshInterceptor автоматически:
+   - Блокирует другие запросы (Mutex)
+   - Делает refresh запрос
+   - Сохраняет новые токены
+   - Повторяет оригинальный запрос
+3. Если refresh не удался → очистка токенов → logout
 
 ### Кэширование
 - Профиль пользователя кэшируется в Room
