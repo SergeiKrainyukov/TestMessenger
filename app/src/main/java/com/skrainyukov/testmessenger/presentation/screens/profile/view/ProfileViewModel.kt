@@ -37,6 +37,10 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun refreshProfile() {
+        loadProfile(forceRefresh = true)
+    }
+
     private fun loadProfile(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }

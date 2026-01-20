@@ -15,11 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import coil.compose.AsyncImage
 import kotlinx.coroutines.flow.collectLatest
 
@@ -33,7 +36,15 @@ fun ProfileScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     var showLogoutDialog by remember { mutableStateOf(false) }
+
+    // Refresh profile when screen becomes visible (after returning from edit screen)
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.refreshProfile()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
@@ -134,7 +145,10 @@ fun ProfileScreen(
                     ProfileInfoItem("Телефон", state.user?.phone ?: "")
                     ProfileInfoItem("Никнейм", state.user?.username ?: "")
                     ProfileInfoItem("Город", state.user?.city ?: "Не указан")
-                    ProfileInfoItem("Дата рождения", state.user?.birthday ?: "Не указана")
+                    ProfileInfoItem(
+                        "Дата рождения",
+                        state.user?.birthday?.let { formatDateForDisplay(it) } ?: "Не указана"
+                    )
                     ProfileInfoItem("Знак зодиака", state.user?.zodiacSign?.displayName ?: "Не определен")
                     ProfileInfoItem("О себе", state.user?.about?.ifEmpty { "Не указано" } ?: "Не указано")
 
@@ -203,5 +217,15 @@ fun ProfileInfoItem(label: String, value: String) {
             text = value,
             fontSize = 16.sp
         )
+    }
+}
+
+// Convert yyyy-MM-dd to dd.MM.yyyy for display
+private fun formatDateForDisplay(date: String): String {
+    return if (date.matches(Regex("""\d{4}-\d{2}-\d{2}"""))) {
+        val parts = date.split("-")
+        "${parts[2]}.${parts[1]}.${parts[0]}"
+    } else {
+        date
     }
 }
