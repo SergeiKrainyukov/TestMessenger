@@ -87,8 +87,6 @@ class PhoneViewModel @Inject constructor(
     }
 
     private fun isPhoneValid(phoneNumber: String): Boolean {
-        // Validate only the number part (without country code)
-        // Should be 10 digits for most countries
         val digitsOnly = phoneNumber.filter { it.isDigit() }
         return digitsOnly.length in 10..11
     }

@@ -6,7 +6,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,16 +22,26 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
@@ -47,7 +64,6 @@ fun EditProfileScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -99,12 +115,10 @@ fun EditProfileScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Avatar section
                 Box(
                     modifier = Modifier.padding(vertical = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Avatar image - show only if not marked for removal
                     val imageModel = if (!state.shouldRemoveAvatar) {
                         state.selectedImageUri ?: state.currentAvatarUrl
                     } else {
@@ -123,7 +137,6 @@ fun EditProfileScreen(
                                 contentScale = ContentScale.Crop
                             )
 
-                            // Remove button - show always when there's an image
                             IconButton(
                                 onClick = { viewModel.onEvent(EditProfileEvent.OnRemoveImage) },
                                 modifier = Modifier
@@ -143,7 +156,6 @@ fun EditProfileScreen(
                             }
                         }
                     } else {
-                        // Placeholder with add button
                         Surface(
                             modifier = Modifier
                                 .size(120.dp)
@@ -230,10 +242,8 @@ fun DateInputField(
     label: String,
     modifier: Modifier = Modifier
 ) {
-    // Store only digits internally
     val digitsOnly = remember(value) {
         if (value.matches(Regex("""\d{4}-\d{2}-\d{2}"""))) {
-            // Convert yyyy-MM-dd to ddMMyyyy
             val parts = value.split("-")
             "${parts[2]}${parts[1]}${parts[0]}"
         } else {
@@ -244,16 +254,13 @@ fun DateInputField(
     OutlinedTextField(
         value = digitsOnly,
         onValueChange = { input ->
-            // Filter only digits and limit to 8
             val filtered = input.filter { it.isDigit() }.take(8)
 
-            // Convert to yyyy-MM-dd format when complete (8 digits)
             if (filtered.length == 8) {
                 val day = filtered.substring(0, 2)
                 val month = filtered.substring(2, 4)
                 val year = filtered.substring(4, 8)
 
-                // Basic validation
                 val dayInt = day.toIntOrNull() ?: 0
                 val monthInt = month.toIntOrNull() ?: 0
 
@@ -291,7 +298,6 @@ class DateVisualTransformation : VisualTransformation {
 
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int {
-                // Add dots: after position 2 and 4 in original
                 return when {
                     offset <= 2 -> offset
                     offset <= 4 -> offset + 1
@@ -300,7 +306,6 @@ class DateVisualTransformation : VisualTransformation {
             }
 
             override fun transformedToOriginal(offset: Int): Int {
-                // Remove dots from transformed position
                 return when {
                     offset <= 2 -> offset
                     offset <= 5 -> offset - 1

@@ -41,7 +41,6 @@ fun PhoneNumberInput(
     OutlinedTextField(
         value = phoneNumber,
         onValueChange = { value ->
-            // Allow only digits and filter out country code if it's being typed
             val filtered = value.filter { it.isDigit() }
             onPhoneNumberChange(filtered)
         },

@@ -17,17 +17,14 @@ class AuthInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        // Check if request has "No-Authentication" header
         val noAuth = originalRequest.header(HttpHeaders.NO_AUTHENTICATION)
         if (noAuth != null) {
-            // Remove the marker header and proceed without auth
             val requestWithoutMarker = originalRequest.newBuilder()
                 .removeHeader(HttpHeaders.NO_AUTHENTICATION)
                 .build()
             return chain.proceed(requestWithoutMarker)
         }
 
-        // Add access token to request
         val accessToken = runBlocking {
             tokenDataStore.accessToken.first()
         }

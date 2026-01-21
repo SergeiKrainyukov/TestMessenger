@@ -95,7 +95,6 @@ fun ProfileScreen(
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Avatar
                     if (state.user?.avatar != null) {
                         SubcomposeAsyncImage(
                             model = state.user!!.avatar,
@@ -164,7 +163,6 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Все поля должны отображаться всегда согласно ТЗ
                     ProfileInfoItem("Телефон", state.user?.phone ?: "")
                     ProfileInfoItem("Никнейм", state.user?.username ?: "")
                     ProfileInfoItem("Город", state.user?.city ?: "Не указан")
@@ -179,7 +177,6 @@ fun ProfileScreen(
         }
     }
 
-    // Logout confirmation dialog
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },

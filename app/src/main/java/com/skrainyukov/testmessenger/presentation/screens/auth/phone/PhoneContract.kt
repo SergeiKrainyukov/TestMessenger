@@ -2,8 +2,6 @@ package com.skrainyukov.testmessenger.presentation.screens.auth.phone
 
 import com.skrainyukov.testmessenger.presentation.components.Country
 
-// MVI Contract Pattern
-
 data class PhoneState(
     val phoneNumber: String = "",
     val selectedCountry: Country? = null,

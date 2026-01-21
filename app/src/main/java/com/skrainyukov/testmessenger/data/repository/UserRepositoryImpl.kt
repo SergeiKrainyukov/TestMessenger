@@ -39,7 +39,6 @@ class UserRepositoryImpl @Inject constructor(
             val userId = tokenDataStore.userId.first()
                 ?: throw AuthException(USER_NOT_AUTHENTICATED_MESSAGE)
 
-            // Try to get from cache first
             if (!forceRefresh) {
                 val cachedUser = userDao.getUserById(userId).first()
                 if (cachedUser != null) {
@@ -47,11 +46,9 @@ class UserRepositoryImpl @Inject constructor(
                 }
             }
 
-            // Fetch from API
             val response = userApi.getCurrentUser()
             val user = response.profileData.toDomain()
 
-            // Save to cache
             userDao.insertUser(user.toEntity())
 
             user
@@ -91,7 +88,6 @@ class UserRepositoryImpl @Inject constructor(
                 else -> null
             }
 
-            // Update user - returns only avatars
             userApi.updateUser(
                 UpdateUserRequest(
                     name = name,
@@ -105,11 +101,9 @@ class UserRepositoryImpl @Inject constructor(
                 )
             )
 
-            // Get updated user data
             val response = userApi.getCurrentUser()
             val user = response.profileData.toDomain()
 
-            // Update cache
             userDao.insertUser(user.toEntity())
 
             user

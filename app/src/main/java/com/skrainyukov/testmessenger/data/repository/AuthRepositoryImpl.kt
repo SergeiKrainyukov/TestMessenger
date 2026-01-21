@@ -29,7 +29,6 @@ class AuthRepositoryImpl @Inject constructor(
         return runCatchingResult {
             val response = authApi.checkAuthCode(CheckAuthCodeRequest(phone, code))
 
-            // Save tokens only if user exists
             if (response.isUserExists &&
                 response.accessToken != null &&
                 response.refreshToken != null &&
@@ -54,7 +53,6 @@ class AuthRepositoryImpl @Inject constructor(
         return runCatchingResult {
             val response = authApi.register(RegisterRequest(phone, name, username))
 
-            // Save tokens if they exist
             if (response.accessToken != null &&
                 response.refreshToken != null &&
                 response.userId != null) {

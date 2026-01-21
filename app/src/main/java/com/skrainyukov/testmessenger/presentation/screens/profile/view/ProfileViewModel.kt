@@ -27,10 +27,8 @@ class ProfileViewModel @Inject constructor(
     val effect = _effect.receiveAsFlow()
 
     init {
-        // Load initial data
         loadProfile()
 
-        // Observe user changes from cache
         viewModelScope.launch {
             observeCurrentUserUseCase().collect { user ->
                 if (user != null) {
@@ -59,7 +57,6 @@ class ProfileViewModel @Inject constructor(
                     _state.update { it.copy(user = result.data, isLoading = false) }
                 }
                 is Result.Error -> {
-                    // Check if it's an authentication error
                     if (result.exception is AuthException) {
                         authRepository.logout()
                         _effect.send(ProfileEffect.NavigateToAuth)

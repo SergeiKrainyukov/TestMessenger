@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditProfileViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val updateUserUseCase: UpdateUserUseCase
 ) : ViewModel() {
@@ -54,7 +54,6 @@ class EditProfileViewModel @Inject constructor(
                 is Result.Error -> {
                     _state.update { it.copy(isInitialLoading = false) }
 
-                    // Check if it's an authentication error
                     if (result.exception is AuthException) {
                         _effect.send(EditProfileEffect.NavigateToAuth)
                     } else {
@@ -120,7 +119,6 @@ class EditProfileViewModel @Inject constructor(
                     _effect.send(EditProfileEffect.NavigateBack)
                 }
                 is Result.Error -> {
-                    // Check if it's an authentication error
                     if (result.exception is AuthException) {
                         _effect.send(EditProfileEffect.NavigateToAuth)
                     } else {
@@ -139,11 +137,9 @@ class EditProfileViewModel @Inject constructor(
         val inputStream = context.contentResolver.openInputStream(uri)
             ?: throw IllegalArgumentException("Cannot open image")
 
-        // Decode image
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
-        // Resize if too large (max 1024x1024)
         val maxSize = 1024
         val ratio = maxSize.toFloat() / maxOf(bitmap.width, bitmap.height)
         val resizedBitmap = if (ratio < 1) {
@@ -157,13 +153,11 @@ class EditProfileViewModel @Inject constructor(
             bitmap
         }
 
-        // Convert to JPEG and base64
         val outputStream = ByteArrayOutputStream()
         resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
         val byteArray = outputStream.toByteArray()
         val base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
 
-        // Generate filename
         val filename = "avatar_${System.currentTimeMillis()}.jpg"
 
         return Pair(filename, base64)

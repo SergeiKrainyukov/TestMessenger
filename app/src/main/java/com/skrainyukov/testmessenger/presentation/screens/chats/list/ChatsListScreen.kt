@@ -23,7 +23,6 @@ fun ChatsListScreen(
     onNavigateToChat: (Long) -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
-    // Mock data for demonstration
     val mockChats = remember {
         listOf(
             Chat(1, "Алексей Петров", null, "Привет! Как дела?", "14:23", 2),

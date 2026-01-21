@@ -25,10 +25,8 @@ fun PhoneScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Get current region as default
     val currentCountry = rememberCurrentCountry()
 
-    // Set initial country once
     LaunchedEffect(currentCountry) {
         viewModel.setInitialCountry(currentCountry)
     }
@@ -67,7 +65,6 @@ fun PhoneScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Use the new phone number input with country picker
         state.selectedCountry?.let { country ->
             PhoneNumberInput(
                 phoneNumber = state.phoneNumber,

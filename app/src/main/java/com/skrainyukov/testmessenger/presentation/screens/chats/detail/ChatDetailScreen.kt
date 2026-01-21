@@ -25,7 +25,6 @@ fun ChatDetailScreen(
 ) {
     var messageText by remember { mutableStateOf("") }
 
-    // Mock messages
     val mockMessages = remember {
         listOf(
             Message(1, 1, 1, "Привет! Как дела?", "14:20", false),
