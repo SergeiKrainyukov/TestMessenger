@@ -62,6 +62,13 @@ fun ProfileScreen(
                     IconButton(onClick = { viewModel.onEvent(ProfileEvent.OnEditClick) }) {
                         Icon(Icons.Default.Edit, "Редактировать")
                     }
+                    IconButton(onClick = { showLogoutDialog = true }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = "Выйти",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             )
         }
@@ -167,25 +174,6 @@ fun ProfileScreen(
                     )
                     ProfileInfoItem("Знак зодиака", state.user?.zodiacSign?.displayName ?: "Не определен")
                     ProfileInfoItem("О себе", state.user?.about?.ifEmpty { "Не указано" } ?: "Не указано")
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Logout button
-                    OutlinedButton(
-                        onClick = { showLogoutDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Выйти из аккаунта")
-                    }
                 }
             }
         }

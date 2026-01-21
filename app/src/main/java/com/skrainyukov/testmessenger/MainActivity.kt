@@ -32,10 +32,9 @@ class MainActivity : ComponentActivity() {
                 var startDestination by remember { mutableStateOf<String?>(null) }
 
                 LaunchedEffect(Unit) {
-                    startDestination = if (authRepository.isAuthenticated()) {
-                        Screen.ChatsList.route
-                    } else {
-                        Screen.Phone.route
+                    startDestination = when {
+                        authRepository.isAuthenticated() -> Screen.ChatsList.route
+                        else -> Screen.Phone.route
                     }
                 }
 

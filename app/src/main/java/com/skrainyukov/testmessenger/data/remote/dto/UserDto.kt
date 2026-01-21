@@ -33,20 +33,10 @@ data class UserDto(
 )
 
 fun UserDto.toDomain(): User {
-    // Convert relative avatar path to full URL
     val avatarUrl = avatars?.avatar?.let { relativePath ->
-        if (relativePath.startsWith("http")) {
-            relativePath
-        } else {
-            "${Constants.BASE_URL}/$relativePath"
-        }
+        "${Constants.BASE_URL}/$relativePath"
     } ?: avatar?.let { filename ->
-        // Fallback for old format (just filename)
-        if (filename.startsWith("http")) {
-            filename
-        } else {
-            "${Constants.BASE_URL}/media/avatars/$filename"
-        }
+        "${Constants.BASE_URL}/media/avatars/$filename"
     }
 
     return User(

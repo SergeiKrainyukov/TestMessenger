@@ -66,14 +66,12 @@ class TokenRefreshInterceptor @Inject constructor(
 
                                     val newAccessToken = jsonResponse["access_token"]?.jsonPrimitive?.content
                                     val newRefreshToken = jsonResponse["refresh_token"]?.jsonPrimitive?.content
-                                    val userId = jsonResponse["user_id"]?.jsonPrimitive?.content?.toLongOrNull()
 
-                                    if (newAccessToken != null && newRefreshToken != null && userId != null) {
+                                    if (newAccessToken != null && newRefreshToken != null) {
                                         // Save new tokens
                                         tokenDataStore.saveTokens(
                                             accessToken = newAccessToken,
                                             refreshToken = newRefreshToken,
-                                            userId = userId
                                         )
 
                                         // Retry original request with new token

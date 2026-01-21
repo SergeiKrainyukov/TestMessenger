@@ -40,15 +40,3 @@ data class RegisterResponse(
     @SerialName("access_token") val accessToken: String?,
     @SerialName("user_id") val userId: Long?
 )
-
-@Serializable
-data class RefreshTokenRequest(
-    @SerialName("refresh_token") val refreshToken: String
-)
-
-@Serializable
-data class RefreshTokenResponse(
-    @SerialName("refresh_token") val refreshToken: String?,
-    @SerialName("access_token") val accessToken: String?,
-    @SerialName("user_id") val userId: Long?
-)

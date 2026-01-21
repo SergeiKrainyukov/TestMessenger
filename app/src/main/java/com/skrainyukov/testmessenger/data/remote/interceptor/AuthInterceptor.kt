@@ -1,6 +1,7 @@
 package com.skrainyukov.testmessenger.data.remote.interceptor
 
 import com.skrainyukov.testmessenger.data.local.datastore.TokenDataStore
+import com.skrainyukov.testmessenger.data.remote.HttpHeaders
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -15,15 +16,15 @@ class AuthInterceptor @Inject constructor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-        val url = originalRequest.url.toString()
 
-        // Skip auth for these endpoints
-        if (url.contains("/send-auth-code/") ||
-            url.contains("/check-auth-code/") ||
-            url.contains("/register/") ||
-            url.contains("/refresh-token/")
-        ) {
-            return chain.proceed(originalRequest)
+        // Check if request has "No-Authentication" header
+        val noAuth = originalRequest.header(HttpHeaders.NO_AUTHENTICATION)
+        if (noAuth != null) {
+            // Remove the marker header and proceed without auth
+            val requestWithoutMarker = originalRequest.newBuilder()
+                .removeHeader(HttpHeaders.NO_AUTHENTICATION)
+                .build()
+            return chain.proceed(requestWithoutMarker)
         }
 
         // Add access token to request
