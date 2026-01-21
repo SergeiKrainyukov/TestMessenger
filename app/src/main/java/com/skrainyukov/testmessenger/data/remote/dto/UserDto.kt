@@ -2,6 +2,7 @@ package com.skrainyukov.testmessenger.data.remote.dto
 
 import com.skrainyukov.testmessenger.domain.model.User
 import com.skrainyukov.testmessenger.domain.model.ZodiacSign
+import com.skrainyukov.testmessenger.util.Constants
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -32,6 +33,22 @@ data class UserDto(
 )
 
 fun UserDto.toDomain(): User {
+    // Convert relative avatar path to full URL
+    val avatarUrl = avatars?.avatar?.let { relativePath ->
+        if (relativePath.startsWith("http")) {
+            relativePath
+        } else {
+            "${Constants.BASE_URL}/$relativePath"
+        }
+    } ?: avatar?.let { filename ->
+        // Fallback for old format (just filename)
+        if (filename.startsWith("http")) {
+            filename
+        } else {
+            "${Constants.BASE_URL}/media/avatars/$filename"
+        }
+    }
+
     return User(
         id = id,
         phone = phone,
@@ -39,7 +56,7 @@ fun UserDto.toDomain(): User {
         name = name,
         birthday = birthday,
         city = city,
-        avatar = avatar,
+        avatar = avatarUrl,
         about = status,
         zodiacSign = ZodiacSign.fromDate(birthday)
     )
