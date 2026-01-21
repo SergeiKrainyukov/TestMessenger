@@ -10,6 +10,7 @@ import com.skrainyukov.testmessenger.data.remote.dto.UpdateUserRequest
 import com.skrainyukov.testmessenger.data.remote.dto.toDomain
 import com.skrainyukov.testmessenger.domain.model.User
 import com.skrainyukov.testmessenger.domain.repository.UserRepository
+import com.skrainyukov.testmessenger.util.AuthException
 import com.skrainyukov.testmessenger.util.Result
 import com.skrainyukov.testmessenger.util.runCatchingResult
 import kotlinx.coroutines.flow.Flow
@@ -25,10 +26,15 @@ class UserRepositoryImpl @Inject constructor(
     private val tokenDataStore: TokenDataStore
 ) : UserRepository {
 
+    companion object {
+        private const val USER_NOT_AUTHENTICATED_MESSAGE = "User not authenticated"
+        private const val USER_NOT_FOUND_MESSAGE = "User not found in cache"
+    }
+
     override suspend fun getCurrentUser(forceRefresh: Boolean): Result<User> {
         return runCatchingResult {
             val userId = tokenDataStore.userId.first()
-                ?: throw IllegalStateException("User not authenticated")
+                ?: throw AuthException(USER_NOT_AUTHENTICATED_MESSAGE)
 
             // Try to get from cache first
             if (!forceRefresh) {
@@ -66,10 +72,10 @@ class UserRepositoryImpl @Inject constructor(
     ): Result<User> {
         return runCatchingResult {
             val userId = tokenDataStore.userId.first()
-                ?: throw IllegalStateException("User not authenticated")
+                ?: throw AuthException(USER_NOT_AUTHENTICATED_MESSAGE)
 
             val cachedUser = userDao.getUserById(userId).first()
-                ?: throw IllegalStateException("User not found in cache")
+                ?: throw IllegalStateException(USER_NOT_FOUND_MESSAGE)
 
             val avatarData = if (avatarFilename != null && avatarBase64 != null) {
                 AvatarData(avatarFilename, avatarBase64)

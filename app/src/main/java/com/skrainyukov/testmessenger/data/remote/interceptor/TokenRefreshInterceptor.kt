@@ -61,7 +61,6 @@ class TokenRefreshInterceptor @Inject constructor(
                             if (refreshResponse.isSuccessful) {
                                 val responseBody = refreshResponse.body?.string() ?: ""
 
-                                // Tokens are nullable according to swagger
                                 if (responseBody.isNotEmpty()) {
                                     val jsonResponse = json.parseToJsonElement(responseBody).jsonObject
 

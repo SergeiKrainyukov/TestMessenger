@@ -79,7 +79,12 @@ fun NavGraph(
 
         composable(Screen.EditProfile.route) {
             EditProfileScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAuth = {
+                    navController.navigate(Screen.Phone.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }

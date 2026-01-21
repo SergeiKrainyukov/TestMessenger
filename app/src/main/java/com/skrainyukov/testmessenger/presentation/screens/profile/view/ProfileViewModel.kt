@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.skrainyukov.testmessenger.domain.repository.AuthRepository
 import com.skrainyukov.testmessenger.domain.usecase.profile.GetCurrentUserUseCase
+import com.skrainyukov.testmessenger.util.AuthException
 import com.skrainyukov.testmessenger.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -50,11 +51,17 @@ class ProfileViewModel @Inject constructor(
                     _state.update { it.copy(user = result.data, isLoading = false) }
                 }
                 is Result.Error -> {
-                    _state.update { it.copy(
-                        error = result.message ?: "Ошибка загрузки профиля",
-                        isLoading = false
-                    ) }
-                    _effect.send(ProfileEffect.ShowError(result.message ?: "Ошибка загрузки профиля"))
+                    // Check if it's an authentication error
+                    if (result.exception is AuthException) {
+                        authRepository.logout()
+                        _effect.send(ProfileEffect.NavigateToAuth)
+                    } else {
+                        _state.update { it.copy(
+                            error = result.message ?: "Ошибка загрузки профиля",
+                            isLoading = false
+                        ) }
+                        _effect.send(ProfileEffect.ShowError(result.message ?: "Ошибка загрузки профиля"))
+                    }
                 }
                 is Result.Loading -> {}
             }

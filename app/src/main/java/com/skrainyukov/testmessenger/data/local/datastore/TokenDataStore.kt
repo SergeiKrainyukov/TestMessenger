@@ -58,31 +58,11 @@ class TokenDataStore @Inject constructor(
         }
     }
 
-    suspend fun updateAccessToken(accessToken: String) {
-        dataStore.edit { preferences ->
-            preferences[ACCESS_TOKEN_KEY] = accessToken
-        }
-    }
-
-    suspend fun updateRefreshToken(refreshToken: String) {
-        dataStore.edit { preferences ->
-            preferences[REFRESH_TOKEN_KEY] = refreshToken
-        }
-    }
-
     suspend fun clearTokens() {
         dataStore.edit { preferences ->
             preferences.remove(ACCESS_TOKEN_KEY)
             preferences.remove(REFRESH_TOKEN_KEY)
             preferences.remove(USER_ID_KEY)
         }
-    }
-
-    suspend fun isAuthenticated(): Boolean {
-        var isAuth = false
-        dataStore.edit { preferences ->
-            isAuth = preferences[ACCESS_TOKEN_KEY] != null
-        }
-        return isAuth
     }
 }

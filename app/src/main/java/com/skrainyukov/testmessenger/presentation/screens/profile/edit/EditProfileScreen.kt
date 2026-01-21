@@ -1,25 +1,39 @@
 package com.skrainyukov.testmessenger.presentation.screens.profile.edit
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.skrainyukov.testmessenger.presentation.components.LoadingButton
 import kotlinx.coroutines.flow.collectLatest
 
@@ -27,15 +41,24 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun EditProfileScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToAuth: () -> Unit,
     viewModel: EditProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.onEvent(EditProfileEvent.OnImageSelected(it)) }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 EditProfileEffect.NavigateBack -> onNavigateBack()
+                EditProfileEffect.NavigateToAuth -> onNavigateToAuth()
                 is EditProfileEffect.ShowError -> {
                     Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
                 }
@@ -73,8 +96,79 @@ fun EditProfileScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .padding(24.dp)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Avatar section
+                Box(
+                    modifier = Modifier.padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Avatar image
+                    val imageModel = state.selectedImageUri ?: state.currentAvatarUrl
+
+                    if (imageModel != null) {
+                        Box {
+                            AsyncImage(
+                                model = imageModel,
+                                contentDescription = "Аватар",
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .clip(CircleShape)
+                                    .clickable { imagePickerLauncher.launch("image/*") },
+                                contentScale = ContentScale.Crop
+                            )
+
+                            // Remove button
+                            if (state.selectedImageUri != null) {
+                                IconButton(
+                                    onClick = { viewModel.onEvent(EditProfileEvent.OnRemoveImage) },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(32.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.error,
+                                            CircleShape
+                                        )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Удалить",
+                                        tint = MaterialTheme.colorScheme.onError,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // Placeholder with add button
+                        Surface(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .clickable { imagePickerLauncher.launch("image/*") },
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Добавить фото",
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Text(
+                    text = "Нажмите для изменения",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 OutlinedTextField(
                     value = state.name,
                     onValueChange = { viewModel.onEvent(EditProfileEvent.OnNameChanged(it)) },
