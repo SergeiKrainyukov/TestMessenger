@@ -104,8 +104,12 @@ fun EditProfileScreen(
                     modifier = Modifier.padding(vertical = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Avatar image
-                    val imageModel = state.selectedImageUri ?: state.currentAvatarUrl
+                    // Avatar image - show only if not marked for removal
+                    val imageModel = if (!state.shouldRemoveAvatar) {
+                        state.selectedImageUri ?: state.currentAvatarUrl
+                    } else {
+                        null
+                    }
 
                     if (imageModel != null) {
                         Box {
@@ -119,25 +123,23 @@ fun EditProfileScreen(
                                 contentScale = ContentScale.Crop
                             )
 
-                            // Remove button
-                            if (state.selectedImageUri != null) {
-                                IconButton(
-                                    onClick = { viewModel.onEvent(EditProfileEvent.OnRemoveImage) },
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .size(32.dp)
-                                        .background(
-                                            MaterialTheme.colorScheme.error,
-                                            CircleShape
-                                        )
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Удалить",
-                                        tint = MaterialTheme.colorScheme.onError,
-                                        modifier = Modifier.size(20.dp)
+                            // Remove button - show always when there's an image
+                            IconButton(
+                                onClick = { viewModel.onEvent(EditProfileEvent.OnRemoveImage) },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .size(32.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.error,
+                                        CircleShape
                                     )
-                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Удалить",
+                                    tint = MaterialTheme.colorScheme.onError,
+                                    modifier = Modifier.size(20.dp)
+                                )
                             }
                         }
                     } else {

@@ -9,6 +9,7 @@ data class EditProfileState(
     val about: String = "",
     val currentAvatarUrl: String? = null,
     val selectedImageUri: Uri? = null,
+    val shouldRemoveAvatar: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
     val isInitialLoading: Boolean = true

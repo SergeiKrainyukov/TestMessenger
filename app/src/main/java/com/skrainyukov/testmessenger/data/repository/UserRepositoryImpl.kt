@@ -13,8 +13,11 @@ import com.skrainyukov.testmessenger.domain.repository.UserRepository
 import com.skrainyukov.testmessenger.util.AuthException
 import com.skrainyukov.testmessenger.util.Result
 import com.skrainyukov.testmessenger.util.runCatchingResult
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -55,10 +58,14 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeCurrentUser(): Flow<User?> {
-        val userId = tokenDataStore.userId
-        return userId.map { id ->
-            id?.let { userDao.getUserById(it).first()?.toDomain() }
+        return tokenDataStore.userId.flatMapLatest { id ->
+            if (id != null) {
+                userDao.getUserById(id).map { it?.toDomain() }
+            } else {
+                flowOf(null)
+            }
         }
     }
 
@@ -68,7 +75,8 @@ class UserRepositoryImpl @Inject constructor(
         city: String?,
         about: String?,
         avatarFilename: String?,
-        avatarBase64: String?
+        avatarBase64: String?,
+        shouldRemoveAvatar: Boolean
     ): Result<User> {
         return runCatchingResult {
             val userId = tokenDataStore.userId.first()
@@ -77,9 +85,11 @@ class UserRepositoryImpl @Inject constructor(
             val cachedUser = userDao.getUserById(userId).first()
                 ?: throw IllegalStateException(USER_NOT_FOUND_MESSAGE)
 
-            val avatarData = if (avatarFilename != null && avatarBase64 != null) {
-                AvatarData(avatarFilename, avatarBase64)
-            } else null
+            val avatarData = when {
+                shouldRemoveAvatar -> AvatarData("", "")  // Send empty strings to remove avatar
+                avatarFilename != null && avatarBase64 != null -> AvatarData(avatarFilename, avatarBase64)
+                else -> null
+            }
 
             // Update user - returns only avatars
             userApi.updateUser(

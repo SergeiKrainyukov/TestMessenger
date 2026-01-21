@@ -13,6 +13,7 @@ interface UserRepository {
         city: String?,
         about: String?,
         avatarFilename: String?,
-        avatarBase64: String?
+        avatarBase64: String?,
+        shouldRemoveAvatar: Boolean = false
     ): Result<User>
 }

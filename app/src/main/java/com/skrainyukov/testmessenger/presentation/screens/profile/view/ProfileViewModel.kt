@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.skrainyukov.testmessenger.domain.repository.AuthRepository
 import com.skrainyukov.testmessenger.domain.usecase.profile.GetCurrentUserUseCase
+import com.skrainyukov.testmessenger.domain.usecase.profile.ObserveCurrentUserUseCase
 import com.skrainyukov.testmessenger.util.AuthException
 import com.skrainyukov.testmessenger.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,6 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
@@ -25,7 +27,17 @@ class ProfileViewModel @Inject constructor(
     val effect = _effect.receiveAsFlow()
 
     init {
+        // Load initial data
         loadProfile()
+
+        // Observe user changes from cache
+        viewModelScope.launch {
+            observeCurrentUserUseCase().collect { user ->
+                if (user != null) {
+                    _state.update { it.copy(user = user, isLoading = false) }
+                }
+            }
+        }
     }
 
     fun onEvent(event: ProfileEvent) {
@@ -36,10 +48,6 @@ class ProfileViewModel @Inject constructor(
             }
             ProfileEvent.OnLogoutClick -> logout()
         }
-    }
-
-    fun refreshProfile() {
-        loadProfile(forceRefresh = true)
     }
 
     private fun loadProfile(forceRefresh: Boolean = false) {

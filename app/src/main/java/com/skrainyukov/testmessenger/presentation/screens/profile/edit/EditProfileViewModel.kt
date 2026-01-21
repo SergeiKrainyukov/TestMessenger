@@ -81,10 +81,10 @@ class EditProfileViewModel @Inject constructor(
                 _state.update { it.copy(about = event.about, error = null) }
             }
             is EditProfileEvent.OnImageSelected -> {
-                _state.update { it.copy(selectedImageUri = event.uri, error = null) }
+                _state.update { it.copy(selectedImageUri = event.uri, shouldRemoveAvatar = false, error = null) }
             }
             EditProfileEvent.OnRemoveImage -> {
-                _state.update { it.copy(selectedImageUri = null, error = null) }
+                _state.update { it.copy(selectedImageUri = null, shouldRemoveAvatar = true, error = null) }
             }
             EditProfileEvent.OnSaveClick -> saveProfile()
         }
@@ -110,7 +110,8 @@ class EditProfileViewModel @Inject constructor(
                 city = _state.value.city.takeIf { it.isNotBlank() },
                 about = _state.value.about.takeIf { it.isNotBlank() },
                 avatarFilename = imageData?.first,
-                avatarBase64 = imageData?.second
+                avatarBase64 = imageData?.second,
+                shouldRemoveAvatar = _state.value.shouldRemoveAvatar
             )
 
             when (result) {

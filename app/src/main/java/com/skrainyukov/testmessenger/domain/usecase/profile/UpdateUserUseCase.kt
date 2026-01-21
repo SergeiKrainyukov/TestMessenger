@@ -14,7 +14,8 @@ class UpdateUserUseCase @Inject constructor(
         city: String?,
         about: String?,
         avatarFilename: String?,
-        avatarBase64: String?
+        avatarBase64: String?,
+        shouldRemoveAvatar: Boolean = false
     ): Result<User> {
         return userRepository.updateUser(
             name = name,
@@ -22,7 +23,8 @@ class UpdateUserUseCase @Inject constructor(
             city = city,
             about = about,
             avatarFilename = avatarFilename,
-            avatarBase64 = avatarBase64
+            avatarBase64 = avatarBase64,
+            shouldRemoveAvatar = shouldRemoveAvatar
         )
     }
 }
